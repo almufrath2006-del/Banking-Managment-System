@@ -6,7 +6,18 @@ public abstract class Bank {
     String name;
     int phno;
     String email;
-     List<String>trns=new ArrayList<>();
+    List<String>trns=new ArrayList<>();
+    static Connection con; 
+    static Statement st;
+    static{
+        try{
+        con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
+        st=con.createStatement();
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+        }
+    }
     Bank(int num){
         this.pin=num; 
     }
@@ -25,13 +36,11 @@ public abstract class Bank {
         System.out.println("Amount deposited.");
         trns.add(dep+" Deposited.");
         try{
-            Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
-            Statement st=con.createStatement();
-            int rs1=st.executeUpdate("update saving set balance=balance+"+dep+" where pin="+pin+";");
-            if (rs1==0) {
-                int rs2=st.executeUpdate("update current set balance=balance+"+dep+" where pin="+pin+";");            
-            }
-            int rs=st.executeUpdate("insert transaction_details value("+pin+",'"+dep+" Amount Deposited');");
+        int rs1=st.executeUpdate("update saving set balance=balance+"+dep+" where pin="+pin+";");
+        if (rs1==0) {
+            int rs2=st.executeUpdate("update current set balance=balance+"+dep+" where pin="+pin+";");            
+        }
+        int rs=st.executeUpdate("insert transaction_details value("+pin+",'"+dep+" Amount Deposited');");
         }
         catch(Exception e){
             e.printStackTrace();
@@ -47,8 +56,6 @@ public abstract class Bank {
                 trns.add(ln.get(lnpay-1)+" Loan Paid");
                 System.out.println("Loan paid");
                 try{
-                    Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
-                    Statement st=con.createStatement();
                     int r=st.executeUpdate("update current set balance=balance-"+ln.get(lnpay-1)+" where pin="+pin+";");
                     if (r==0) {
                         int r1=st.executeUpdate("update saving set balance=balance-"+ln.get(lnpay-1)+" where pin="+pin+";");
@@ -94,8 +101,6 @@ class currentBank extends Bank{
         System.out.println("Loan Amount Added to your balance.");
         trns.add(loan+" Loan Added.");
         try {
-            Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
-            Statement st=con.createStatement();
             int rs=st.executeUpdate("insert loan value("+pin+","+loan+");");
             int rs1=st.executeUpdate("update current set balance=balance+"+loan+";");
             int rs2=st.executeUpdate("insert transaction_details value("+pin+",'"+loan+" Loan Added');");
@@ -109,8 +114,6 @@ class currentBank extends Bank{
             System.out.println("Amount withdrawed.");
             trns.add(with+" Amount withdrawed.");
             try{
-                Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
-                Statement st=con.createStatement();
                 int rs1=st.executeUpdate("update current set balance=balance-"+with+" where pin="+pin+";");
                 int rs=st.executeUpdate("insert transaction_details value("+pin+",'"+with+" Amount Withdrawed');");
             }
@@ -137,8 +140,6 @@ class saveBank extends Bank{
             System.out.println("Loan Amount Added to your balance.");
             trns.add(loan+" Loan Added.");
             try {
-                Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
-                Statement st=con.createStatement();
                 int rs=st.executeUpdate("insert loan value("+pin+",'"+loan+"');");
                 int rs1=st.executeUpdate("insert transaction_details value("+pin+",'"+loan+" Loan Added');");
                 int rs2=st.executeUpdate("update saving set balance=balance+"+loan+";");
@@ -156,8 +157,6 @@ class saveBank extends Bank{
             System.out.println("Amount withdrawed.");
             trns.add(with+" Amount withdrawed.");
             try{
-                Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
-                Statement st=con.createStatement();
                 int rs1=st.executeUpdate("update saving set balance=balance-"+with+" where pin="+pin+";");
                 int rs=st.executeUpdate("insert transaction_details value("+pin+",'"+with+" Amount Withdrawed');");
             }
@@ -175,9 +174,7 @@ class Main{
         Map<Integer,Bank>account=new HashMap<>();
         Scanner muf=new Scanner(System.in);
         try{
-            Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
-            Statement st=con.createStatement();
-            ResultSet rs=st.executeQuery("select * from saving;");
+            ResultSet rs=Bank.st.executeQuery("select * from saving;");
             while (rs.next()) {
                 account.put(rs.getInt(1),(new saveBank(rs.getInt(1))));
                 account.get(rs.getInt(1)).name(rs.getString(2));
@@ -185,7 +182,7 @@ class Main{
                 account.get(rs.getInt(1)).email(rs.getString(4));
                 account.get(rs.getInt(1)).AddBalance(rs.getDouble(5));
             }
-            ResultSet rs1=st.executeQuery("select * from current;");
+            ResultSet rs1=Bank.st.executeQuery("select * from current;");
             while (rs1.next()) {
                 account.put(rs.getInt(1),(new currentBank(rs.getInt(1))));
                 account.get(rs.getInt(1)).name(rs.getString(2));
@@ -193,13 +190,13 @@ class Main{
                 account.get(rs.getInt(1)).email(rs.getString(4));
                 account.get(rs.getInt(1)).AddBalance(rs.getDouble(5));   
             }
-            ResultSet rs2=st.executeQuery("select * from transaction_details;");
+            ResultSet rs2=Bank.st.executeQuery("select * from transaction_details;");
             while (rs2.next()) {
                 if (account.containsKey(rs2.getInt(1))) {
                     account.get(rs2.getInt(1)).trns.add(rs2.getString(2));
                 }
             }
-            ResultSet rs3=st.executeQuery("select * from loan;");
+            ResultSet rs3=Bank.st.executeQuery("select * from loan;");
             while (rs3.next()) {
                 if (account.containsKey(rs3.getInt(1))) {
                     account.get(rs3.getInt(1)).ln.add(rs3.getDouble(2));
@@ -242,9 +239,7 @@ class Main{
                             account.get(pin).phno(phno);
                             account.get(pin).email(email);
                             try{
-                                Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
-                                Statement st=con.createStatement();
-                                int rs=st.executeUpdate("insert saving value("+pin+",'"+name+"',"+phno+",'"+email+"',"+0+");");                            }
+                                int rs=Bank.st.executeUpdate("insert saving value("+pin+",'"+name+"',"+phno+",'"+email+"',"+0+");");                            }
                             catch(Exception e){
                                 e.printStackTrace();
                             }
@@ -271,9 +266,7 @@ class Main{
                                 account.get(pin).phno(phno);
                                 account.get(pin).email(email);
                                 try{
-                                    Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
-                                    Statement st=con.createStatement();
-                                    int rs=st.executeUpdate("insert current value("+pin+",'"+name+"',"+phno+",'"+email+"',"+0+");");
+                                    int rs=Bank.st.executeUpdate("insert current value("+pin+",'"+name+"',"+phno+",'"+email+"',"+0+");");
                                 }
                                 catch(Exception e){
                                     e.printStackTrace();
@@ -371,22 +364,20 @@ class Main{
                                                 double tamt=muf.nextInt();
                                                 if (account.get(pin).balance()>=tamt) {
                                                     try{
-                                                        Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
-                                                        Statement st=con.createStatement();
                                                         account.get(pin).balance-=tamt;
-                                                        int rs=st.executeUpdate("update saving set balance=balance-"+tamt+" where pin="+pin+";");
+                                                        int rs=Bank.st.executeUpdate("update saving set balance=balance-"+tamt+" where pin="+pin+";");
                                                         if (rs==0) {
-                                                            int rs2=st.executeUpdate("update current set balance=balance-"+tamt+" where pin="+pin+";");   
+                                                            int rs2=Bank.st.executeUpdate("update current set balance=balance-"+tamt+" where pin="+pin+";");   
                                                         }
                                                         account.get(pin).trns.add("Amount "+tamt+" Sended to Account N/O:"+tpin);
-                                                        int rs1=st.executeUpdate("insert transaction_details value("+pin+",'Amount "+tamt+" Sended to Account N/O:"+tpin+"');");
+                                                        int rs1=Bank.st.executeUpdate("insert transaction_details value("+pin+",'Amount "+tamt+" Sended to Account N/O:"+tpin+"');");
                                                         account.get(tpin).balance+=tamt;
-                                                        int rs2=st.executeUpdate("update saving set balance=balance+"+tamt+" where pin="+tpin+";");
+                                                        int rs2=Bank.st.executeUpdate("update saving set balance=balance+"+tamt+" where pin="+tpin+";");
                                                         if (rs2==0) {
-                                                            int rs3=st.executeUpdate("update current set balance=balance+"+tamt+" where pin="+tpin+";");   
+                                                            int rs3=Bank.st.executeUpdate("update current set balance=balance+"+tamt+" where pin="+tpin+";");   
                                                         }
                                                         account.get(tpin).trns.add("Amount "+tamt+" Recived from Account N/O:"+tpin);
-                                                        int rs3=st.executeUpdate("insert transaction_details value("+tpin+",'Amount "+tamt+" Recived From Account N/O:"+pin+"');");
+                                                        int rs3=Bank.st.executeUpdate("insert transaction_details value("+tpin+",'Amount "+tamt+" Recived From Account N/O:"+pin+"');");
                                                         System.out.println("Amount Transfered Succesfully."); 
                                                     }
                                                     catch(Exception e){
@@ -433,7 +424,7 @@ class Main{
                                             }
                                         }
                                         else if (choice3==2) {
-                                            if (account.get(cpin).ln.size()>0) {
+                                        if (account.get(cpin).ln.size()>0) {
                                                 int sno=1;
                                                 for (double i : account.get(cpin).ln) {
                                                     System.out.println("Loan No:"+sno+++" Loan Amount:"+i);
@@ -492,14 +483,12 @@ class Main{
                         String name=muf.nextLine();
                         if(account.get(pin).name.equals(name)){
                             try {
-                                Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","1234");
-                                Statement st=con.createStatement();
-                                int r=st.executeUpdate("delete from saving where pin="+pin+";");
+                                int r=Bank.st.executeUpdate("delete from saving where pin="+pin+";");
                                 if (r==0) {
-                                    int r1=st.executeUpdate("delete from current where pin="+pin+";");   
+                                    int r1=Bank.st.executeUpdate("delete from current where pin="+pin+";");   
                                 }
-                                int r2=st.executeUpdate("delete from loan where pin="+pin+";");
-                                int r3=st.executeUpdate("delete from transaction_details where pin="+pin+";");   
+                                int r2=Bank.st.executeUpdate("delete from loan where pin="+pin+";");
+                                int r3=Bank.st.executeUpdate("delete from transaction_details where pin="+pin+";");   
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
