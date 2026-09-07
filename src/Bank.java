@@ -102,7 +102,7 @@ class currentBank extends Bank{
         trns.add(loan+" Loan Added.");
         try {
             int rs=st.executeUpdate("insert loan value("+pin+","+loan+");");
-            int rs1=st.executeUpdate("update current set balance=balance+"+loan+";");
+            int rs1=st.executeUpdate("update current set balance=balance+"+loan+" where pin="+pin+";");
             int rs2=st.executeUpdate("insert transaction_details value("+pin+",'"+loan+" Loan Added');");
         } catch (Exception e) {
             e.printStackTrace();
@@ -142,7 +142,7 @@ class saveBank extends Bank{
             try {
                 int rs=st.executeUpdate("insert loan value("+pin+",'"+loan+"');");
                 int rs1=st.executeUpdate("insert transaction_details value("+pin+",'"+loan+" Loan Added');");
-                int rs2=st.executeUpdate("update saving set balance=balance+"+loan+";");
+                int rs2=st.executeUpdate("update saving set balance=balance+"+loan+" where pin="+pin+";");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -296,7 +296,8 @@ class Main{
                             System.out.println("4.Loan");
                             System.out.println("5.Transaction Historty");
                             System.out.println("6.Your Account details");
-                            System.out.println("7.Back.");
+                            System.out.println("7.Change PIN.");
+                            System.out.println("8.Stop");
                             System.out.print("Enter choice: ");
                             int choice2=muf.nextInt();    
                             if (choice2==1) {
@@ -460,7 +461,24 @@ class Main{
                                     System.out.println("Wrong pin");
                                 }
                             }
-                            else if(choice2==7)break;
+                            else if(choice2==7){
+                                System.out.println("Enter Pin:");
+                                int pin2=muf.nextInt();
+                                if(pin2==pin){
+                                    System.out.println("Enter new pin:");
+                                    int npin=muf.nextInt();
+                                    int rs=Bank.st.executeUpdate("update saving set pin="+npin+" where pin="+pin+";");
+                                    System.out.println("Restart to change pin");
+                                    if (rs==0) {
+                                    int rs2=Bank.st.executeUpdate("update current set pin="+npin+" where pin="+pin+";");
+                                    System.out.println("Restart to change pin");
+                                    }
+                                }
+                                else{
+                                    System.out.println("Invalid pin");
+                                }
+                            }
+                            else if(choice2==8)break;
                             else{
                                 System.out.println("Invalid choice.");
                             }

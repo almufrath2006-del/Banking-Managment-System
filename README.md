@@ -12,7 +12,8 @@ ensuring zero data loss between sessions.
 - Dual account types — Savings and Current with different business rules
 - Secure 4-digit PIN-based authentication for all transactions
 - Customer registration with name, phone number, and email
-- View account details (name, PIN, phone, email) with PIN verification
+- View account details (name, PIN, phone, email) with PIN verification 
+- PIN Change features
 - Deposit with real-time MySQL database update
 - Withdrawal with minimum balance validation
   (Savings: ₹500 minimum, Current: ₹1000 minimum)
